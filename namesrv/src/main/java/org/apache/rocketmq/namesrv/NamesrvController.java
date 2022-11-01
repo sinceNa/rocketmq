@@ -73,6 +73,13 @@ public class NamesrvController {
         this.configuration.setStorePathFromConfig(this.namesrvConfig, "configStorePath");
     }
 
+    /**
+     * 主要是加载KV配置，创建NettyServer，开启两个定时任务
+     * 一个定时任务是每隔10s扫描一次Broker，移除处于未活跃状态的broker
+     * 一个定时任务是每隔10分钟打印KV配置
+     *
+     * @return
+     */
     public boolean initialize() {
 
         this.kvConfigManager.load();

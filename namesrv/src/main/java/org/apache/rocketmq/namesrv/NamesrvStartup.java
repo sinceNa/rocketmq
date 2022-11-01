@@ -68,6 +68,14 @@ public class NamesrvStartup {
         return null;
     }
 
+    /**
+     * 主要是解析配置文件，填充进NamesrvConfig和NettyServerConfig对象，最终创建NamesrvController
+     *
+     * @param args
+     * @return
+     * @throws IOException
+     * @throws JoranException
+     */
     public static NamesrvController createNamesrvController(String[] args) throws IOException, JoranException {
         System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
         //PackageConflictDetect.detectFastjson();
@@ -79,9 +87,15 @@ public class NamesrvStartup {
             return null;
         }
 
+        // NameServer业务参数
         final NamesrvConfig namesrvConfig = new NamesrvConfig();
+
+        // NameServer网络参数
         final NettyServerConfig nettyServerConfig = new NettyServerConfig();
+
         nettyServerConfig.setListenPort(9876);
+
+        // 将指定到配置文件填充到两对象中   -c fileName
         if (commandLine.hasOption('c')) {
             String file = commandLine.getOptionValue('c');
             if (file != null) {
@@ -98,6 +112,7 @@ public class NamesrvStartup {
             }
         }
 
+        // 打印当前加载到配置属性  -p
         if (commandLine.hasOption('p')) {
             InternalLogger console = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_CONSOLE_NAME);
             MixAll.printObjectProperties(console, namesrvConfig);
@@ -105,6 +120,7 @@ public class NamesrvStartup {
             System.exit(0);
         }
 
+        // 将启动命令中到选项值填充到 namesrvConfig
         MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), namesrvConfig);
 
         if (null == namesrvConfig.getRocketmqHome()) {
@@ -143,6 +159,7 @@ public class NamesrvStartup {
             System.exit(-3);
         }
 
+        // 注册一个shutdown钩子，在JVM关闭之前，先关闭nettyServer和停止线程池
         Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(log, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
